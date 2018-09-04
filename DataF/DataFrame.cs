@@ -177,7 +177,7 @@ namespace DataF
 
         public StringBuilder ShowAsTable()
         {
-            StringBuilder _stringBuilder = new StringBuilder("");
+            StringBuilder stringBuilder = new StringBuilder("");
             for (int i = 0; i < _rowBound; i++)
             {
                 for (int j = 0; j < _columnBound; j++)
@@ -192,12 +192,12 @@ namespace DataF
                     {
                     }
 
-                    _stringBuilder.Append($"{value}\t");
+                    stringBuilder.Append($"{value}\t");
                 }
 
-                _stringBuilder.Append("\n");
+                stringBuilder.Append("\n");
             }
-            return _stringBuilder;
+            return stringBuilder;
         }
 
         public void Dispose()
@@ -250,11 +250,10 @@ namespace DataF
                         if (_dataTable[firstIn].GetType().Name == "String" 
                             && value.GetType().Name == "String")
                         {
-                            string nameTypeFirstElement = "String";
                             if (Int32.TryParse(value.ToString(), out var tryGetIntValue1))
                             {
                                 if (Int32.TryParse(_dataTable[firstIn].ToString(),
-                                    out var tryGetIntValue2))
+                                    out var _))
                                 {
                                     _dataTable[index] = tryGetIntValue1;
                                 }
@@ -262,7 +261,7 @@ namespace DataF
                             else
                             {
                                 if (!Int32.TryParse(_dataTable[firstIn].ToString(), 
-                                    out var tryGetIntValue3))
+                                    out var _))
                                 {
                                     _dataTable[index] = value;
                                 }
@@ -290,8 +289,8 @@ namespace DataF
         {
             get
             {
-                var _row = new RowsCollection(_dataTable);
-                return _row[rowIndex];
+                var row = new RowsCollection(_dataTable);
+                return row[rowIndex];
             }
         }
 
