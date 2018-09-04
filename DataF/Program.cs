@@ -40,7 +40,16 @@ namespace DataF
             var str = dataFrame.ShowAsTable();
             Console.Write(str);
             Console.WriteLine(dataFrame[0][3]);
-
+            Console.WriteLine("Before: " + dataFrame.RowBound);
+            object[] arr = new object[]{12.3, "str", 12, 12.4, 12.34};
+            dataFrame.AddDataRow(dataFrame, arr);
+            str = dataFrame.ShowAsTable();
+            Console.Write(str);
+            Console.WriteLine("After: " + dataFrame.RowBound);
+            dataFrame.AddDataColumn(dataFrame, arr);
+            str = dataFrame.ShowAsTable();
+            Console.Write(str);
+            Console.WriteLine("After: " + dataFrame.ColumnBound);
             //DataFrame data = new DataFrame(@"E:\Kurs_senticode\DataF\test.csv");
             //data.Show();
             //string json = JsonConvert.SerializeObject(data);

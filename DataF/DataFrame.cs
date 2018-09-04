@@ -247,19 +247,22 @@ namespace DataF
                             else break;
                         }
                         //
-                        if (_dataTable[firstIn].GetType().Name == "String" && value.GetType().Name == "String")
+                        if (_dataTable[firstIn].GetType().Name == "String" 
+                            && value.GetType().Name == "String")
                         {
                             string nameTypeFirstElement = "String";
                             if (Int32.TryParse(value.ToString(), out var tryGetIntValue1))
                             {
-                                if (Int32.TryParse(_dataTable[firstIn].ToString(), out var tryGetIntValue2))
+                                if (Int32.TryParse(_dataTable[firstIn].ToString(),
+                                    out var tryGetIntValue2))
                                 {
                                     _dataTable[index] = tryGetIntValue1;
                                 }
                             }
                             else
                             {
-                                if (!Int32.TryParse(_dataTable[firstIn].ToString(), out var tryGetIntValue3))
+                                if (!Int32.TryParse(_dataTable[firstIn].ToString(), 
+                                    out var tryGetIntValue3))
                                 {
                                     _dataTable[index] = value;
                                 }
@@ -270,7 +273,6 @@ namespace DataF
                             _dataTable[index] = (_dataTable[firstIn].GetType().Name == value.GetType().Name) ?
                                 value : null;
                         }
-
                     }
                     else
                     {
@@ -281,7 +283,6 @@ namespace DataF
                 {
                     throw new IndexOutOfRangeException();
                 }
-
             }
         }
 
@@ -332,8 +333,46 @@ namespace DataF
             }
         }
 
-        //public new void Add(string key, object value)
-        //{
-        //}
+        public void AddRow()
+        {
+            _rowBound += 1;
+        }
+
+        public void AddColumn()
+        {
+            _columnBound += 1;
+        }
+
+        public bool AddDataRow(DataFrame dataFrame, object[] dataArr)
+        {
+            if (dataFrame.ColumnBound == dataArr.Length)
+            {
+                dataFrame.AddRow();
+                int i = dataFrame.RowBound - 1;
+                for (int j = 0; j < dataFrame.ColumnBound; j++)
+                {
+                    dataFrame[i, j] = dataArr[j];
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        public bool AddDataColumn(DataFrame dataFrame, object[] dataArr)
+        {
+            if (dataFrame.RowBound == dataArr.Length)
+            {
+                dataFrame.AddColumn();
+                int j = dataFrame.ColumnBound - 1;
+                for (int i = 0; i < dataFrame.RowBound; i++)
+                {
+                    dataFrame[i, j] = dataArr[i];
+                }
+
+                return true;
+            }
+            return false;
+        }
     }
 }
