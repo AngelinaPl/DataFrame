@@ -74,6 +74,7 @@ namespace linaPl.DataFrame
             //Console.Write(str);
             //Console.WriteLine("After: " + dataFrame.RowBound);
 
+
             //DataFrame data = new DataFrame(@"E:\Kurs_senticode\DataF\test.csv");
             //data.Show();
             //string json = JsonConvert.SerializeObject(data);
