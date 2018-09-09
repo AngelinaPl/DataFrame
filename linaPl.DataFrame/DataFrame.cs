@@ -1,11 +1,12 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using Newtonsoft.Json;
 
-namespace DataF
+namespace linaPl.DataFrame
 {
     [JsonObject(MemberSerialization.OptIn)]
     public partial class DataFrame : IDisposable
@@ -17,21 +18,18 @@ namespace DataF
 
         public struct CellKey
         {
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public int Row;
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public int Column;
         }
+
         [JsonProperty]
         private Dictionary<CellKey, object> _dataTable;
 
-        public int ColumnBound
-        {
-            get => _columnBound;
-        }
+        public int ColumnBound => _columnBound;
 
-        public int RowBound
-        {
-            get => _rowBound;
-        }
+        public int RowBound => _rowBound;
 
         public DataFrame(int row, int column)
         {
@@ -64,7 +62,7 @@ namespace DataF
         {
             _rowBound = arr.GetUpperBound(0) + 1;
             _columnBound = arr.Length / _rowBound;
-            using (DataFrame dataFrame = new DataFrame(_rowBound, _columnBound))
+            using (var dataFrame = new DataFrame(_rowBound, _columnBound))
             {
                 for (int i = 0; i < _rowBound; i++)
                 {
@@ -85,7 +83,7 @@ namespace DataF
             {
                 _columnBound = arr[i].Length > _columnBound ? arr[i].Length : _columnBound;
             }
-            using (DataFrame dataFrame = new DataFrame(_rowBound, _columnBound))
+            using (var dataFrame = new DataFrame(_rowBound, _columnBound))
             {
                 for (int i = 0; i < _rowBound; i++)
                 {
@@ -113,7 +111,7 @@ namespace DataF
                 }
             }
 
-            using (DataFrame dataFrame = new DataFrame(_rowBound, _columnBound))
+            using (var dataFrame = new DataFrame(_rowBound, _columnBound))
             {
                 int i = 0;
                 foreach (var s in dictionary.Keys)
@@ -134,36 +132,45 @@ namespace DataF
             }
         }
 
-        public DataFrame(string pathcsv)
+        public DataFrame(string csvPath)
         {
-            FileInfo fInfo = new FileInfo(pathcsv);
+            var fInfo = new FileInfo(csvPath);
             if (!fInfo.Exists)
             {
                 throw new FileNotFoundException();
             }
 
-            string[] data = File.ReadAllLines(pathcsv);
+            var data = File.ReadAllLines(csvPath);
             _rowBound = data.Length;
-            object[][] dataStr = new object[_rowBound][];
-            for (int i = 0; i < _rowBound; i++)
-            {
-                dataStr[i] = data[i].Split(',');
-                if (i == 0)
-                {
-                    _columnBound = dataStr[i].Length;
-                }
-                _columnBound = dataStr[i].Length > _columnBound ? dataStr[i].Length : _columnBound;
-            }
 
-            using (DataFrame dataFrame = new DataFrame(_rowBound, _columnBound))
+            //var dataStr = new object[_rowBound][];
+            //for (int i = 0; i < _rowBound; i++)
+            //{
+            //    dataStr[i] = data[i].Split(',');
+            //    if (i == 0)
+            //    {
+            //        _columnBound = dataStr[i].Length;
+            //    }
+            //    _columnBound = dataStr[i].Length > _columnBound ? dataStr[i].Length : _columnBound;
+            //}
+
+            var rawStrTable = data
+                .Select(str => str.Split(','))
+                .ToArray();
+
+            int length = rawStrTable[0].Length;
+            if (rawStrTable.Any(arr => arr.Length != length))
+                throw new Exception("Bad CSV file!"); // TODO Exeption and message
+
+            using (var dataFrame = new DataFrame(_rowBound, _columnBound))
             {
                 for (int i = 0; i < _rowBound; i++)
                 {
-                    for (int j = 0; j < dataStr[i].Length; j++)
+                    for (int j = 0; j < rawStrTable[i].Length; j++)
                     {
-                        if (dataStr[i][j] != null)
+                        if (rawStrTable[i][j] != null)
                         {
-                            dataFrame[i, j] = dataStr[i][j];
+                            dataFrame[i, j] = rawStrTable[i][j];
                         }
                         else
                         {
@@ -175,9 +182,44 @@ namespace DataF
             }
         }
 
-        public StringBuilder ShowAsTable()
+        private static readonly Dictionary<Type, int> _typesDictionary = new Dictionary<Type, int>()
         {
-            StringBuilder _stringBuilder = new StringBuilder("");
+            { typeof(Int32), 0},
+            { typeof(Double), 1},
+            { typeof(String), 2}
+        };
+        public Type DefineColumnType(Dictionary<CellKey, object> dataTable, int column)
+        {
+            var putColumnKeys = dataTable.Keys
+                .Where(i => i.Column == column).ToArray();
+
+            Type typeRet = null;
+
+            if (putColumnKeys.Length >= 0)
+            {
+                int keyOfType = -1;
+
+                foreach (var index in putColumnKeys)
+                {
+                    if (dataTable.TryGetValue(index, out var valueTableElement))
+                    {
+                        if (_typesDictionary.TryGetValue(valueTableElement.GetType(), out var numberType))
+                        {
+                            if (keyOfType < numberType)
+                            {
+                                keyOfType = numberType;
+                                typeRet = valueTableElement.GetType();
+                            }
+                        }
+                    }
+                }
+            }
+            return typeRet;
+        }
+
+        public StringBuilder PrintAsTable()
+        {
+            StringBuilder stringBuilder = new StringBuilder("");
             for (int i = 0; i < _rowBound; i++)
             {
                 for (int j = 0; j < _columnBound; j++)
@@ -192,18 +234,33 @@ namespace DataF
                     {
                     }
 
-                    _stringBuilder.Append($"{value}\t");
+                    stringBuilder.Append($"{value}\t");
                 }
 
-                _stringBuilder.Append("\n");
+                stringBuilder.Append("\n");
             }
-            return _stringBuilder;
+            return stringBuilder;
         }
 
         public void Dispose()
         {
         }
 
+        private Dictionary<Type, Action<Dictionary<CellKey, object>, int>> typeDictionary;
+        public void ChangeType(Dictionary<CellKey, object> dataTable, int indexColumn, Type type)
+        {
+            typeDictionary = new Dictionary<Type, Action<Dictionary<CellKey, object>, int>>()
+            {
+                { typeof(String), delegate { ChangeColumnOnString(dataTable, indexColumn);}},
+                { typeof(Int32), delegate { ChangeColumnOnInt(dataTable, indexColumn);}},
+                { typeof(Double), delegate { ChangeColumnOnDouble(dataTable, indexColumn);}}
+            };
+            if (typeDictionary.TryGetValue(type, out var methodChange))
+            {
+                methodChange(dataTable, indexColumn);
+            }
+
+        }
         public object this[int row, int column]
         {
             get
@@ -226,58 +283,38 @@ namespace DataF
             {
                 if (row < _rowBound && column < _columnBound)
                 {
-                    CellKey index = new CellKey
+                    var index = new CellKey
                     {
                         Row = row,
                         Column = column
                     };
-                    var selectedColumn = _dataTable.Keys.Where(i => i.Column == column);
+                    var selectedColumnKeys = _dataTable.Keys
+                        .Where(i => i.Column == column)
+                        .ToArray();
 
                     int counter = 0;
-                    CellKey firstIn = index;
-                    if (selectedColumn.Count() != 0)
-                    {
-                        foreach (var s in selectedColumn)
-                        {
-                            if (counter == 0)
-                            {
-                                firstIn = s;
-                                counter++;
-                            }
-                            else break;
-                        }
-                        //
-                        if (_dataTable[firstIn].GetType().Name == "String" 
-                            && value.GetType().Name == "String")
-                        {
-                            string nameTypeFirstElement = "String";
-                            if (Int32.TryParse(value.ToString(), out var tryGetIntValue1))
-                            {
-                                if (Int32.TryParse(_dataTable[firstIn].ToString(),
-                                    out var tryGetIntValue2))
-                                {
-                                    _dataTable[index] = tryGetIntValue1;
-                                }
-                            }
-                            else
-                            {
-                                if (!Int32.TryParse(_dataTable[firstIn].ToString(), 
-                                    out var tryGetIntValue3))
-                                {
-                                    _dataTable[index] = value;
-                                }
-                            }
-                        } // Необходимо ли оставить?
-                        else
-                        {
-                            _dataTable[index] = (_dataTable[firstIn].GetType().Name == value.GetType().Name) ?
-                                value : null;
-                        }
-                    }
-                    else
-                    {
-                        _dataTable[index] = value;
-                    }
+                    var firstIn = index;
+                    //if (selectedColumn.Length != 0)
+                    //{
+                    //    foreach (var s in selectedColumn)
+                    //    {
+                    //        if (counter == 0)
+                    //        {
+                    //            firstIn = s;
+                    //            counter++;
+                    //        }
+                    //        else break;
+                    //    }
+                        
+                    //    _dataTable[index] = (_dataTable[firstIn].GetType().Name == value.GetType().Name) ?
+                    //                value : null;
+                    //}
+                    //else
+                    //{
+                    //    _dataTable[index] = value;
+                    //}
+                    var type = DefineColumnType(_dataTable, column);
+                    ChangeType(_dataTable, column, type);
                 }
                 else
                 {
@@ -286,12 +323,45 @@ namespace DataF
             }
         }
 
+        private static void ChangeColumnOnString(Dictionary<CellKey, object> dataTable, int column)
+        {
+            var selectedColumnKeys = dataTable.Keys
+                .Where(i => i.Column == column)
+                .ToArray();
+            foreach (var index in selectedColumnKeys)
+            {
+                dataTable[index] = dataTable[index].ToString();
+            }
+        }
+
+        private static void ChangeColumnOnInt(Dictionary<CellKey, object> dataTable, int column)
+        {
+            var selectedColumnKeys = dataTable.Keys
+                .Where(i => i.Column == column)
+                .ToArray();
+            foreach (var index in selectedColumnKeys)
+            {
+                dataTable[index] = Convert.ToInt32(dataTable[index]);
+            }
+        }
+
+        private static void ChangeColumnOnDouble(Dictionary<CellKey, object> dataTable, int column)
+        {
+            var selectedColumnKeys = dataTable.Keys
+                .Where(i => i.Column == column)
+                .ToArray();
+            foreach (var index in selectedColumnKeys)
+            {
+                dataTable[index] = Convert.ToDouble(dataTable[index]);
+            }
+        }
+
         public Row this[int rowIndex]
         {
             get
             {
-                var _row = new RowsCollection(_dataTable);
-                return _row[rowIndex];
+                var row = new RowsCollection(_dataTable);
+                return row[rowIndex];
             }
         }
 
@@ -374,5 +444,22 @@ namespace DataF
             }
             return false;
         }
+
+        //public bool DeleteRow(DataFrame dataFrame, int row)
+        //{
+        //    if (row < dataFrame.RowBound && row >= 0)
+        //    {
+                
+        //        for (int j = 0; j < dataFrame.ColumnBound; j++)
+        //        {
+        //            dataFrame[row, j] = dataFrame[dataFrame.RowBound - 1, j];
+        //        }
+
+        //        dataFrame._rowBound -= 1;
+        //        return true;
+        //    }
+
+        //    return false;
+        //}
     }
 }

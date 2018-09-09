@@ -1,55 +1,50 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace DataF
+namespace linaPl.DataFrame
 {
     partial class DataFrame
     {
-        public class ColumnsCollection : IReadOnlyDictionary<int, Column>
+        public class RowsCollection : IReadOnlyDictionary<int, Row>
         {
             private static DataFrame _dataFrame;
-            private Column _column;
 
-            public ColumnsCollection(DataFrame dataFrame)
+            public RowsCollection(DataFrame dataFrame)
             {
                 _dataFrame = dataFrame;
             }
 
-            public ColumnsCollection(Dictionary<CellKey, object> dataTable)
+            public RowsCollection(Dictionary<CellKey, object> dataTable)
             {
                 _dataFrame = new DataFrame(dataTable);
             }
 
-            public Column this[int key]
+            public Row this[int key]
             {
-                get
-                {
-                    _column = new Column(key, _dataFrame);
-                    return _column;
-                }
+                get => new Row(key, _dataFrame);
             }
 
-            public class ColumnKeysCollection : IReadOnlyList<int>
+            class RowKeysCollection : IReadOnlyList<int>
             {
                 public int this[int index]
                 {
                     get => index;
                 }
-
                 public int Count
                 {
                     get => _dataFrame.RowBound * _dataFrame.ColumnBound;
                 }
 
-                public struct ColumnKesCollectionEnumerator : IEnumerator<int>
+                public struct RowKeyCollectionEnumerator : IEnumerator<int>
                 {
                     private int _index;
 
-                    public ColumnKesCollectionEnumerator(DataFrame dataFrame)
+                    // ReSharper disable once UnusedParameter.Local
+                    public RowKeyCollectionEnumerator(DataFrame dataFrame)
                     {
                         _index = -1;
                     }
+
                     public int Current
                     {
                         get => _index;
@@ -66,7 +61,7 @@ namespace DataF
 
                     public bool MoveNext()
                     {
-                        if (_index < _dataFrame.ColumnBound)
+                        if (_index < _dataFrame.RowBound)
                         {
                             _index += 1;
                             return true;
@@ -80,38 +75,30 @@ namespace DataF
                     }
                 }
 
-                public IEnumerator<int> GetEnumerator()
+                public IEnumerator GetEnumerator()
                 {
-                    return new ColumnKesCollectionEnumerator(_dataFrame);
+                    return new RowKeyCollectionEnumerator(_dataFrame);
                 }
 
-                IEnumerator IEnumerable.GetEnumerator()
+                IEnumerator<int> IEnumerable<int>.GetEnumerator()
                 {
-                    return new ColumnKesCollectionEnumerator(_dataFrame);
+                    return new RowKeyCollectionEnumerator(_dataFrame);
                 }
             }
 
-            private List<int> _keys = new List<int>();
             public IEnumerable<int> Keys
             {
-                get
-                {
-                    for (int i = 0; i < _dataFrame._columnBound; i++)
-                    {
-                        _keys.Add(i);
-                    }
-                    return _keys;
-                }
+                get => new RowKeysCollection();
             }
 
-            private List<Column> _values = new List<Column>();
-            public IEnumerable<Column> Values
+            private List<Row> _values = new List<Row>();
+            public IEnumerable<Row> Values
             {
                 get
                 {
-                    for (int i = 0; i < _dataFrame._columnBound; i++)
+                    for (int i = 0; i < _dataFrame._rowBound; i++)
                     {
-                        _values.Add(new Column(i, _dataFrame));
+                        _values.Add(new Row(i, _dataFrame));
                     }
                     return _values;
                 }
@@ -119,42 +106,47 @@ namespace DataF
 
             public int Count
             {
-                get => _dataFrame._columnBound;
+                get => _dataFrame._rowBound;
             }
 
             public bool ContainsKey(int key)
             {
-                if (key >= 0 && key < _dataFrame._columnBound)
+                if (key >= 0 && key < _dataFrame._rowBound)
                 {
                     return true;
                 }
                 return false;
             }
 
-            public struct ColumnsCollectionEnumerator : IEnumerator<KeyValuePair<int, Column>>
+            public struct RowsCollectionEnumerator : IEnumerator<KeyValuePair<int, Row>>
             {
-                private int _columnIndex;
+                private int _rowIndex;
+                // ReSharper disable once MemberHidesStaticFromOuterClass
                 private DataFrame _dataFrame;
 
-                public ColumnsCollectionEnumerator(DataFrame dataFrame)
+                public RowsCollectionEnumerator(DataFrame dataFrame)
                 {
-                    _columnIndex = -1;
+                    _rowIndex = -1;
                     _dataFrame = dataFrame;
-                }
-
-                public KeyValuePair<int, Column> Current
-                {
-                    get
-                    {
-                        KeyValuePair<int, Column> column = new KeyValuePair<int, Column>
-                            (_columnIndex, new Column(_columnIndex, _dataFrame));
-                        return column;
-                    }
                 }
 
                 object IEnumerator.Current
                 {
-                    get => new Column(_columnIndex, _dataFrame);
+                    get
+                    {
+                        Row row = new Row(_rowIndex, _dataFrame);
+                        return row[_rowIndex];
+                    }
+                }
+
+                KeyValuePair<int, Row> IEnumerator<KeyValuePair<int, Row>>.Current
+                {
+                    get
+                    {
+                        var row = new KeyValuePair<int, Row>
+                            (_rowIndex, new Row(_rowIndex, _dataFrame));
+                        return row;
+                    }
                 }
 
                 public void Dispose()
@@ -163,9 +155,9 @@ namespace DataF
 
                 public bool MoveNext()
                 {
-                    if (_columnIndex < _dataFrame._columnBound)
+                    if (_rowIndex < _dataFrame._rowBound)
                     {
-                        _columnIndex += 1;
+                        _rowIndex += 1;
                         return true;
                     }
                     return false;
@@ -173,29 +165,29 @@ namespace DataF
 
                 public void Reset()
                 {
-                    _columnIndex = -1;
+                    _rowIndex = -1;
                 }
             }
 
-            public IEnumerator<KeyValuePair<int, Column>> GetEnumerator()
+            public bool TryGetValue(int key, out Row value)
             {
-                return new ColumnsCollectionEnumerator(_dataFrame);
-            }
-
-            public bool TryGetValue(int key, out Column value)
-            {
-                if (key >= 0 && key < _dataFrame._columnBound)
+                if (key >= 0 && key < _dataFrame._rowBound)
                 {
-                    value = new Column(key, _dataFrame);
+                    value = new Row(key, _dataFrame);
                     return true;
                 }
                 value = null;
                 return false;
             }
 
+            public IEnumerator<KeyValuePair<int, Row>> GetEnumerator()
+            {
+                return new RowsCollectionEnumerator(_dataFrame);
+            }
+
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return new ColumnsCollectionEnumerator(_dataFrame);
+                return new RowsCollectionEnumerator(_dataFrame);
             }
         }
     }

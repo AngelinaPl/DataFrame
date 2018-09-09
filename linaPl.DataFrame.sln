@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27703.2042
+VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataF", "DataF\DataF.csproj", "{39CEA147-E185-4ACA-88D8-B9B6F6E5D4AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "linaPl.DataFrame", "linaPl.DataFrame\linaPl.DataFrame.csproj", "{39CEA147-E185-4ACA-88D8-B9B6F6E5D4AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
