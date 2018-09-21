@@ -23,56 +23,12 @@ namespace linaPl.DataFrame
             //Console.WriteLine($"{typ}");
             //dataT[new DataFrame.CellKey() { Row = 0, Column = 0 }] =  dataT[
             //    new DataFrame.CellKey() {Row = 0, Column = 0}];
-            df.ChangeType(dataT, 0, typ);
-            foreach (var element in dataT)
-            {
-                Console.WriteLine(element.Value.GetType());
-            }
-
-            //var dataFrame = new DataFrame(4, 5);
-            //dataFrame[0, 0] = 13;
-            //dataFrame[1, 0] = 14.432;
-            //dataFrame[2, 0] = 15;
-            //dataFrame[3, 0] = "dfg";
-
-            //dataFrame[0, 1] = "str";
-            //dataFrame[1, 1] = 432;
-            //dataFrame[2, 1] = "str3";
-            //dataFrame[3, 1] = 3.543;
-
-            //dataFrame[0, 2] = 12.1;
-            //dataFrame[1, 2] = 56;
-            //dataFrame[2, 2] = "hjg";
-            //dataFrame[3, 2] = 13.7;
-
-            //dataFrame[0, 3] = 12.1;
-            //dataFrame[1, 3] = 12.3;
-            //dataFrame[2, 3] = 13.7;
-            //dataFrame[3, 3] = 13.7;
-
-            //dataFrame[0, 4] = 12.1;
-            //dataFrame[1, 4] = 12.3;
-            //dataFrame[2, 4] = 13.7;
-            //dataFrame[3, 4] = "fgh";
-            //var str = dataFrame.PrintAsTable();
-            //Console.Write(str);
-            //Console.WriteLine(dataFrame[0][3]);
-            //Console.WriteLine("Before: " + dataFrame.RowBound);
-            //var arr = new object[]{12.3, "str", 12, 12.4, 12.34};
-            //dataFrame.AddDataRow(dataFrame, arr);
-            //str = dataFrame.PrintAsTable();
-            //Console.Write(str);
-            //Console.WriteLine("After: " + dataFrame.RowBound);
-            //dataFrame.AddDataColumn(dataFrame, arr);
-            //str = dataFrame.PrintAsTable();
-            //Console.Write(str);
-            //Console.WriteLine("After: " + dataFrame.ColumnBound);
-
-
-            //dataFrame.DeleteRow(dataFrame, 2);
-            //str = dataFrame.ShowAsTable();
-            //Console.Write(str);
-            //Console.WriteLine("After: " + dataFrame.RowBound);
+            //df.ChangeType(dataT, 0, typ);
+            //foreach (var element in dataT)
+            //{
+            //    Console.WriteLine(element.Value.GetType());
+            //}
+            
 
 
             //DataFrame data = new DataFrame(@"E:\Kurs_senticode\DataF\test.csv");

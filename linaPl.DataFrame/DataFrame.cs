@@ -1,19 +1,15 @@
-﻿using System;
+﻿using linaPl.DataFrame.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace linaPl.DataFrame
 {
-    [JsonObject(MemberSerialization.OptIn)]
-    public partial class DataFrame : IDisposable
+    public partial class DataFrame : IDisposable, IDataFrame
     {
-        [JsonProperty]
         private int _rowBound;
-        [JsonProperty]
         private int _columnBound;
 
         public struct CellKey
@@ -24,7 +20,6 @@ namespace linaPl.DataFrame
             public int Column;
         }
 
-        [JsonProperty]
         private Dictionary<CellKey, object> _dataTable;
 
         public int ColumnBound => _columnBound;
@@ -83,16 +78,19 @@ namespace linaPl.DataFrame
             {
                 _columnBound = arr[i].Length > _columnBound ? arr[i].Length : _columnBound;
             }
-            using (var dataFrame = new DataFrame(_rowBound, _columnBound))
+            for (int i = 0; i < _rowBound; i++)
             {
-                for (int i = 0; i < _rowBound; i++)
+                for (int j = 0; j < arr[i].Length; j++)
                 {
-                    for (int j = 0; j < arr[i].Length; j++)
+                    CellKey index = new CellKey()
                     {
-                        dataFrame[i, j] = arr[i][j];
-                    }
+                        Row = i,
+                        Column = j
+                    };
+                    _dataTable.Add(index, arr[i][j]);
+                    var type = DefineColumnType(_dataTable, j);
+                    ChangeType(_dataTable, j, type);
                 }
-                _dataTable = dataFrame._dataTable;
             }
         }
 
@@ -143,16 +141,16 @@ namespace linaPl.DataFrame
             var data = File.ReadAllLines(csvPath);
             _rowBound = data.Length;
 
-            //var dataStr = new object[_rowBound][];
-            //for (int i = 0; i < _rowBound; i++)
-            //{
-            //    dataStr[i] = data[i].Split(',');
-            //    if (i == 0)
-            //    {
-            //        _columnBound = dataStr[i].Length;
-            //    }
-            //    _columnBound = dataStr[i].Length > _columnBound ? dataStr[i].Length : _columnBound;
-            //}
+            var dataStr = new object[_rowBound][];
+            for (int i = 0; i < _rowBound; i++)
+            {
+                dataStr[i] = data[i].Split(',');
+                if (i == 0)
+                {
+                    _columnBound = dataStr[i].Length;
+                }
+                _columnBound = dataStr[i].Length > _columnBound ? dataStr[i].Length : _columnBound;
+            }
 
             var rawStrTable = data
                 .Select(str => str.Split(','))
@@ -292,27 +290,7 @@ namespace linaPl.DataFrame
                         .Where(i => i.Column == column)
                         .ToArray();
 
-                    int counter = 0;
-                    var firstIn = index;
-                    //if (selectedColumn.Length != 0)
-                    //{
-                    //    foreach (var s in selectedColumn)
-                    //    {
-                    //        if (counter == 0)
-                    //        {
-                    //            firstIn = s;
-                    //            counter++;
-                    //        }
-                    //        else break;
-                    //    }
-                        
-                    //    _dataTable[index] = (_dataTable[firstIn].GetType().Name == value.GetType().Name) ?
-                    //                value : null;
-                    //}
-                    //else
-                    //{
-                    //    _dataTable[index] = value;
-                    //}
+                    _dataTable[index] = value;
                     var type = DefineColumnType(_dataTable, column);
                     ChangeType(_dataTable, column, type);
                 }
@@ -449,7 +427,7 @@ namespace linaPl.DataFrame
         //{
         //    if (row < dataFrame.RowBound && row >= 0)
         //    {
-                
+
         //        for (int j = 0; j < dataFrame.ColumnBound; j++)
         //        {
         //            dataFrame[row, j] = dataFrame[dataFrame.RowBound - 1, j];
