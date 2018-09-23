@@ -1,19 +1,16 @@
-﻿using linaPl.DataFrame;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using linaPl.DataFrame.Interfaces;
-using static linaPl.DataFrame.DataFrame;
+using static linaPl.DataFrame.DataFrame.DataFrame;
 
 namespace TestFramework
 {
     public class MockDataFrame : IDataFrame
     {
         Dictionary<CellKey, object> _dataTable;
-        public int RowBound { get; private set; } = 0;
-        public int ColumnBound { get; private set; } = 0;
+        public int RowBound { get; private set; }
+        public int ColumnBound { get; private set; }
         public MockDataFrame(Dictionary<CellKey, object> dataTable)
         {
             _dataTable = dataTable;
@@ -36,6 +33,7 @@ namespace TestFramework
 
         public MockDataFrame(object[,] arr)
         {
+            _dataTable = new Dictionary<CellKey, object>();
             RowBound = arr.GetUpperBound(0);
             ColumnBound = arr.Length / RowBound;
         }
@@ -91,9 +89,9 @@ namespace TestFramework
                         Row = row,
                         Column = column
                     };
-                    var selectedColumnKeys = _dataTable.Keys
-                        .Where(i => i.Column == column)
-                        .ToArray();
+                    //var selectedColumnKeys = _dataTable.Keys
+                    //    .Where(i => i.Column == column)
+                    //    .ToArray();
                     
                     _dataTable[index] = value;
                 }
@@ -103,33 +101,63 @@ namespace TestFramework
                 }
             }
         }
-
         
 
-
-        Type IDataFrame.DefineColumnType(Dictionary<DataFrame.CellKey, object> dataTable, int column)
+        public StringBuilder PrintAsTable()
         {
-            throw new NotImplementedException();
+            StringBuilder stringBuilder = new StringBuilder("");
+            for (int i = 0; i < RowBound; i++)
+            {
+                for (int j = 0; j < ColumnBound; j++)
+                {
+                    object value;
+                    CellKey index = new CellKey()
+                    {
+                        Row = i,
+                        Column = j
+                    };
+                    if (_dataTable.TryGetValue(index, out value))
+                    {
+                    }
+
+                    stringBuilder.Append($"{value}\t");
+                }
+
+                stringBuilder.Append("\n");
+            }
+            return stringBuilder;
+        }
+        
+        public void AddRow()
+        {
+            RowBound += 1;
         }
 
-        StringBuilder IDataFrame.PrintAsTable()
+        public void AddColumn()
         {
-            throw new NotImplementedException();
+            ColumnBound += 1;
         }
 
-        void IDataFrame.ChangeType(Dictionary<DataFrame.CellKey, object> dataTable, int indexColumn, Type type)
+        public bool DeleteColumn(int column)
         {
-            throw new NotImplementedException();
+            if (column >= 0 && column < ColumnBound)
+            {
+                ColumnBound -= 1;
+                return true;
+            }
+
+            return false;
         }
 
-        void IDataFrame.AddRow()
+        public bool DeleteRow(int row)
         {
-            throw new NotImplementedException();
-        }
+            if (row >= 0 && row < RowBound)
+            {
+                RowBound -= 1;
+                return true;
+            }
 
-        void IDataFrame.AddColumn()
-        {
-            throw new NotImplementedException();
+            return false;
         }
     }
     

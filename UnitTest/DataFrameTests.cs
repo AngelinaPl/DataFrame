@@ -1,11 +1,7 @@
 ﻿using NUnit.Framework;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TestFramework;
-using static linaPl.DataFrame.DataFrame;
+using static linaPl.DataFrame.DataFrame.DataFrame;
 
 namespace UnitTest
 {
@@ -93,7 +89,6 @@ namespace UnitTest
             array[3][2] = 32.4;
             array[3][3] = 33;
 
-
             // Act
             MockDataFrame dataFrame = new MockDataFrame(array);
 
@@ -108,10 +103,79 @@ namespace UnitTest
             }
         }
 
+        [Test]
+        public void Test0003_AddRow()
+        {
+            // Arrange
+            object[,] array = new object[2, 4];
+            MockDataFrame dataFrame = new MockDataFrame(array);
+
+            // Act
+            dataFrame.AddRow();
+
+            // Assert
+            Assert.AreEqual(array.GetUpperBound(0) + 1, dataFrame.RowBound);
+        }
+
+        [Test]
+        public void Test0004_AddColumn()
+        {
+            // Arrange
+            object[,] array = new object[2, 4];
+            MockDataFrame dataFrame = new MockDataFrame(array);
+
+            // Act
+            dataFrame.AddColumn();
+
+            // Assert
+            Assert.AreEqual((array.Length / array.GetUpperBound(0) + 1), dataFrame.ColumnBound);
+        }
+
+        [Test]
+        public void Test0005_PrintAsTable()
+        {
+            // Arrange
+            object[,] array = new object[2, 4];
+            MockDataFrame dataFrame = new MockDataFrame(array);
+
+            // Act
+            var table = dataFrame.PrintAsTable();
+
+            // Assert
+            Assert.IsNotNull(table);
+        }
+
+        [Test]
+        public void Test0006_DeleteColumn()
+        {
+            // Arrange
+            object[,] array = new object[2, 4];
+            MockDataFrame dataFrame = new MockDataFrame(array);
+
+            // Act
+            dataFrame.DeleteColumn(0);
+
+            // Assert
+            Assert.AreEqual((array.Length / array.GetUpperBound(0) - 1), dataFrame.ColumnBound);
+        }
+
+        [Test]
+        public void Test0007_DeleteRow()
+        {
+            // Arrange
+            object[,] array = new object[2, 4];
+            MockDataFrame dataFrame = new MockDataFrame(array);
+
+            // Act
+            dataFrame.DeleteRow(0);
+
+            // Assert
+            Assert.AreEqual((array.GetUpperBound(0) - 1), dataFrame.RowBound);
+        }
+
         [TearDown]
         public void TearDown()
         {
         }
-
     }
 }

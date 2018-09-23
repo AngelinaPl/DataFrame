@@ -1,11 +1,11 @@
-﻿using linaPl.DataFrame.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using linaPl.DataFrame.Interfaces;
 
-namespace linaPl.DataFrame
+namespace linaPl.DataFrame.DataFrame
 {
     public partial class DataFrame : IDisposable, IDataFrame
     {
@@ -72,6 +72,7 @@ namespace linaPl.DataFrame
 
         public DataFrame(object[][] arr)
         {
+            _dataTable = new Dictionary<CellKey, object>();
             _rowBound = arr.Length;
             _columnBound = 0;
             for (int i = 0; i < _rowBound; i++)
@@ -144,6 +145,7 @@ namespace linaPl.DataFrame
             var dataStr = new object[_rowBound][];
             for (int i = 0; i < _rowBound; i++)
             {
+                // ReSharper disable once CoVariantArrayConversion
                 dataStr[i] = data[i].Split(',');
                 if (i == 0)
                 {
@@ -180,7 +182,7 @@ namespace linaPl.DataFrame
             }
         }
 
-        private static readonly Dictionary<Type, int> _typesDictionary = new Dictionary<Type, int>()
+        private static readonly Dictionary<Type, int> TypesDictionary = new Dictionary<Type, int>()
         {
             { typeof(Int32), 0},
             { typeof(Double), 1},
@@ -201,7 +203,7 @@ namespace linaPl.DataFrame
                 {
                     if (dataTable.TryGetValue(index, out var valueTableElement))
                     {
-                        if (_typesDictionary.TryGetValue(valueTableElement.GetType(), out var numberType))
+                        if (TypesDictionary.TryGetValue(valueTableElement.GetType(), out var numberType))
                         {
                             if (keyOfType < numberType)
                             {
@@ -244,16 +246,16 @@ namespace linaPl.DataFrame
         {
         }
 
-        private Dictionary<Type, Action<Dictionary<CellKey, object>, int>> typeDictionary;
+        private Dictionary<Type, Action<Dictionary<CellKey, object>, int>> _typeDictionary;
         public void ChangeType(Dictionary<CellKey, object> dataTable, int indexColumn, Type type)
         {
-            typeDictionary = new Dictionary<Type, Action<Dictionary<CellKey, object>, int>>()
+            _typeDictionary = new Dictionary<Type, Action<Dictionary<CellKey, object>, int>>()
             {
                 { typeof(String), delegate { ChangeColumnOnString(dataTable, indexColumn);}},
                 { typeof(Int32), delegate { ChangeColumnOnInt(dataTable, indexColumn);}},
                 { typeof(Double), delegate { ChangeColumnOnDouble(dataTable, indexColumn);}}
             };
-            if (typeDictionary.TryGetValue(type, out var methodChange))
+            if (_typeDictionary.TryGetValue(type, out var methodChange))
             {
                 methodChange(dataTable, indexColumn);
             }
@@ -286,9 +288,9 @@ namespace linaPl.DataFrame
                         Row = row,
                         Column = column
                     };
-                    var selectedColumnKeys = _dataTable.Keys
-                        .Where(i => i.Column == column)
-                        .ToArray();
+                    //var selectedColumnKeys = _dataTable.Keys
+                    //    .Where(i => i.Column == column)
+                    //    .ToArray();
 
                     _dataTable[index] = value;
                     var type = DefineColumnType(_dataTable, column);
@@ -423,21 +425,76 @@ namespace linaPl.DataFrame
             return false;
         }
 
-        //public bool DeleteRow(DataFrame dataFrame, int row)
-        //{
-        //    if (row < dataFrame.RowBound && row >= 0)
-        //    {
+        public bool DeleteRow(int row)
+        {
+            if (row < _rowBound && row >= 0)
+            {
+                CellKey indexNew;
+                CellKey indexOld;
+                for (int  i = row; i < _rowBound; i++)
+                {
+                    for (int j = 0; j < _columnBound; j++)
+                    {
+                        indexOld = new CellKey()
+                        {
+                            Row = i + 1,
+                            Column = j
+                        };
+                        if (i < _rowBound - 1)
+                        {
+                            indexNew = new CellKey()
+                            {
+                                Row = i,
+                                Column = j
+                            };
+                            _dataTable[indexNew] = _dataTable[indexOld];
+                        }
+                        else if (i == _rowBound - 1)
+                        {
+                            _dataTable[indexOld] = null;
+                        }
+                    }
+                }
+                _rowBound -= 1;
+                return true;
+            }
+            return false;
+        }
 
-        //        for (int j = 0; j < dataFrame.ColumnBound; j++)
-        //        {
-        //            dataFrame[row, j] = dataFrame[dataFrame.RowBound - 1, j];
-        //        }
-
-        //        dataFrame._rowBound -= 1;
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
+        public bool DeleteColumn(int column)
+        {
+            if (column < _columnBound && column >= 0)
+            {
+                CellKey indexNew;
+                CellKey indexOld;
+                for (int j = column; j < _columnBound - 1; j++)
+                {
+                    for (int i = 0; i < _rowBound; i++)
+                    {
+                        indexOld = new CellKey()
+                        {
+                            Row = i,
+                            Column = j + 1
+                        };
+                        if (i < _columnBound - 1)
+                        {
+                            indexNew = new CellKey()
+                            {
+                                Row = i,
+                                Column = j
+                            };
+                            _dataTable[indexNew] = _dataTable[indexOld];
+                        }
+                        else if (i == _columnBound - 1)
+                        {
+                            _dataTable[indexOld] = null;
+                        }
+                    }
+                }
+                _columnBound -= 1;
+                return true;
+            }
+            return false;
+        }
     }
 }

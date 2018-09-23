@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace linaPl.DataFrame
+namespace linaPl.DataFrame.DataFrame
 {
     partial class DataFrame
     {
